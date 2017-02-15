@@ -41,20 +41,19 @@ RCT_EXPORT_METHOD(stop)
                 moreComing:(BOOL)moreComing
 {
     if(service == nil) {
-        [self reportError:@{@"error":@"Unable to add null service."}];
+        return;
     }
-    else {
-        NSDictionary *serviceInfo = [RNNetServiceSerializer serializeServiceToDictionary:service resolved:NO];
-        [self.bridge.eventDispatcher sendDeviceEventWithName:@"RNZeroconfFound" body:serviceInfo];
 
-        // resolving services must be strongly referenced or they will be garbage collected
-        // and will never resolve or timeout.
-        // source: http://stackoverflow.com/a/16130535/2715
-        self.resolvingServices[service.name] = service;
+    NSDictionary *serviceInfo = [RNNetServiceSerializer serializeServiceToDictionary:service resolved:NO];
+    [self.bridge.eventDispatcher sendDeviceEventWithName:@"RNZeroconfFound" body:serviceInfo];
 
-        service.delegate = self;
-        [service resolveWithTimeout:5.0];
-    }
+    // resolving services must be strongly referenced or they will be garbage collected
+    // and will never resolve or timeout.
+    // source: http://stackoverflow.com/a/16130535/2715
+    self.resolvingServices[service.name] = service;
+
+    service.delegate = self;
+    [service resolveWithTimeout:5.0];
 }
 
 // When a service is removed.
@@ -63,12 +62,11 @@ RCT_EXPORT_METHOD(stop)
                 moreComing:(BOOL)moreComing
 {
     if(service == nil) {
-        [self reportError:@{@"error":@"Unable to remove null service."}];
+        return;
     }
-    else {
-        NSDictionary *serviceInfo = [RNNetServiceSerializer serializeServiceToDictionary:service resolved:NO];
-        [self.bridge.eventDispatcher sendDeviceEventWithName:@"RNZeroconfRemove" body:serviceInfo];
-    }
+
+    NSDictionary *serviceInfo = [RNNetServiceSerializer serializeServiceToDictionary:service resolved:NO];
+    [self.bridge.eventDispatcher sendDeviceEventWithName:@"RNZeroconfRemove" body:serviceInfo];
 }
 
 // When the search fails.
