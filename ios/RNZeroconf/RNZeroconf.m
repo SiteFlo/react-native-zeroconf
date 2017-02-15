@@ -40,16 +40,21 @@ RCT_EXPORT_METHOD(stop)
             didFindService:(NSNetService *)service
                 moreComing:(BOOL)moreComing
 {
-    NSDictionary *serviceInfo = [RNNetServiceSerializer serializeServiceToDictionary:service resolved:NO];
-    [self.bridge.eventDispatcher sendDeviceEventWithName:@"RNZeroconfFound" body:serviceInfo];
+    if(service == nil) {
+        [self reportError:@{@"error":@"Unable to add null service."}];
+    }
+    else {
+        NSDictionary *serviceInfo = [RNNetServiceSerializer serializeServiceToDictionary:service resolved:NO];
+        [self.bridge.eventDispatcher sendDeviceEventWithName:@"RNZeroconfFound" body:serviceInfo];
 
-    // resolving services must be strongly referenced or they will be garbage collected
-    // and will never resolve or timeout.
-    // source: http://stackoverflow.com/a/16130535/2715
-    self.resolvingServices[service.name] = service;
+        // resolving services must be strongly referenced or they will be garbage collected
+        // and will never resolve or timeout.
+        // source: http://stackoverflow.com/a/16130535/2715
+        self.resolvingServices[service.name] = service;
 
-    service.delegate = self;
-    [service resolveWithTimeout:5.0];
+        service.delegate = self;
+        [service resolveWithTimeout:5.0];
+    }
 }
 
 // When a service is removed.
@@ -57,8 +62,13 @@ RCT_EXPORT_METHOD(stop)
           didRemoveService:(NSNetService*)service
                 moreComing:(BOOL)moreComing
 {
-    NSDictionary *serviceInfo = [RNNetServiceSerializer serializeServiceToDictionary:service resolved:NO];
-    [self.bridge.eventDispatcher sendDeviceEventWithName:@"RNZeroconfRemove" body:serviceInfo];
+    if(service == nil) {
+        [self reportError:@{@"error":@"Unable to remove null service."}];
+    }
+    else {
+        NSDictionary *serviceInfo = [RNNetServiceSerializer serializeServiceToDictionary:service resolved:NO];
+        [self.bridge.eventDispatcher sendDeviceEventWithName:@"RNZeroconfRemove" body:serviceInfo];
+    }
 }
 
 // When the search fails.
